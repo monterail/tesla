@@ -2,7 +2,26 @@ defmodule Tesla.Builder do
   @http_verbs ~w(head get delete trace options post put patch)a
   @body ~w(post put patch)a
 
+  require Logger
+
   defmacro __using__(opts \\ []) do
+    unless Application.get_env(:tesla, :warning_acknowledged, false) do
+      Logger.warn("""
+      `use Tesla.Builder` and `use Tesla` are soft-deprecated. It will be removed in future major version in favor of
+      Runtime Configuration instead.
+
+      Read more and follow the issues:
+      - https://github.com/elixir-tesla/tesla/issues/612
+      - https://github.com/elixir-tesla/tesla/issues/377
+
+      If you wish to turn off this warning, add the following to your config.exs:
+
+      ```elixir
+      config :tesla, warning_acknowledged: true
+      ```
+      """)
+    end
+
     opts = Macro.prewalk(opts, &Macro.expand(&1, __CALLER__))
     docs = Keyword.get(opts, :docs, true)
 
