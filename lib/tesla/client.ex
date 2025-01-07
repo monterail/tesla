@@ -43,6 +43,25 @@ defmodule Tesla.Client do
     unruntime(client.pre)
   end
 
+  @doc ~S"""
+  Given an update function, create a new client by transforming the
+  list of middlewares for an existing one.
+
+  ## Examples
+
+      iex> middleware = [{Tesla.Middleware.BaseUrl, "https://api.github.com"}]
+      iex> client = Tesla.client(middleware)
+      iex> new_client = Tesla.Client.update_middleware(client, &([Tesla.Middleware.JSON] ++ &1))
+      iex> Tesla.Client.middleware(new_client)
+      [Tesla.Middleware.JSON, {Tesla.Middleware.BaseUrl, "https://api.github.com"}]
+  """
+  @spec update_middleware(t(), ([middleware()] -> [middleware()])) :: t()
+  def update_middleware(client, update_fun) do
+    existing_middleware = middleware(client)
+    new_middleware = update_fun.(existing_middleware)
+    Tesla.client(new_middleware, adapter(client))
+  end
+
   defp unruntime(list) when is_list(list), do: Enum.map(list, &unruntime/1)
   defp unruntime({module, :call, [[]]}) when is_atom(module), do: module
   defp unruntime({module, :call, [opts]}) when is_atom(module), do: {module, opts}

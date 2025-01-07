@@ -49,4 +49,21 @@ defmodule Tesla.ClientTest do
       assert middlewares == Tesla.Client.middleware(client)
     end
   end
+
+  describe "Tesla.Client.update_middleware/2" do
+    test "updates middleware" do
+      existing_middleware = [FirstMiddleware]
+      client = Tesla.client(existing_middleware)
+
+      updated_client =
+        Tesla.Client.update_middleware(
+          client,
+          &([{SecondMiddleware, options: :are, fun: 1}] ++ &1)
+        )
+
+      expected_middlewares = [{SecondMiddleware, options: :are, fun: 1}, FirstMiddleware]
+
+      assert expected_middlewares == Tesla.Client.middleware(updated_client)
+    end
+  end
 end
