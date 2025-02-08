@@ -339,17 +339,35 @@ if Code.ensure_loaded?(Mint.HTTP) do
 
     defp reduce_responses(responses, ref, acc) do
       Enum.reduce(responses, acc, fn
+        {:error, ^ref, _error}, acc ->
+          acc
+
+        {:push_promise, ^ref, _promised_request_ref, _headers}, acc ->
+          acc
+
         {:status, ^ref, code}, acc ->
           Map.put(acc, :status, code)
+
+        {:status, _promised_request_ref, _code}, acc ->
+          acc
 
         {:headers, ^ref, headers}, acc ->
           Map.update(acc, :headers, headers, &(&1 ++ headers))
 
+        {:headers, _promised_request_ref, _headers}, acc ->
+          acc
+
         {:data, ^ref, data}, acc ->
           Map.update(acc, :data, data, &(&1 <> data))
 
+        {:data, _promised_request_ref, _data}, acc ->
+          acc
+
         {:done, ^ref}, acc ->
           Map.put(acc, :done, true)
+
+        {:done, _promised_request_ref}, acc ->
+          acc
       end)
     end
   end
